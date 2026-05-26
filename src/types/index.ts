@@ -8,17 +8,21 @@ export interface MediaResult {
   id: number;
   original_name: string;
   name: string;
+  title: string;
   overview: string;
   poster_path: string;
+  profile_path: string;
   media_type: string;
   original_language: string;
   genre_ids: number[];
   popularity: number;
   first_air_date: string;
+  release_date: string;
   softcore: boolean;
   vote_average: number;
   vote_count: number;
   origin_country: string[];
+  known_for: MediaResult[];
 }
 
 export interface Item {

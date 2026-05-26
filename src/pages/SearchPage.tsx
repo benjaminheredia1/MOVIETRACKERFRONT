@@ -1,13 +1,13 @@
-import { useState, useCallback, useEffect } from "react";
-import { Search, Star, Plus, TrendingUp, Loader2, Film, Tv } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { searchMedia, getRecommendations, addItem } from "@/services/api";
-import { getPosterUrl, getBackdropUrl } from "@/lib/helpers";
-import type { MediaResult } from "@/types";
+  import { useState, useCallback, useEffect } from "react";
+  import { Search, Star, Plus, TrendingUp, Loader2, Film, Tv, UserRound } from "lucide-react";
+  import { Input } from "@/components/ui/input";
+  import { Button } from "@/components/ui/button";
+  import { Card, CardContent } from "@/components/ui/card";
+  import { Badge } from "@/components/ui/badge";
+  import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+  import { searchMedia, getRecommendations, addItem } from "@/services/api";
+  import { getMediaImage, getMediaName, getMediaTypeLabel, getBackdropUrl } from "@/lib/helpers";
+  import type { MediaResult } from "@/types";
 import { toast } from "sonner";
 
 export default function SearchPage() {
@@ -56,17 +56,18 @@ export default function SearchPage() {
   const handleAddToWatchlist = async (media: MediaResult) => {
     setAddingItem(true);
     try {
+      const displayName = getMediaName(media);
       await addItem({
         tmdb_id: media.id,
-        name: media.name || media.original_name,
+        name: displayName,
         original_name: media.original_name,
         overview: media.overview,
-        poster_path: media.poster_path,
+        poster_path: media.poster_path || media.profile_path,
         backdrop_path: media.backdrop_path,
-        media_type: media.media_type || "movie",
+        media_type: media.media_type === "person" ? "movie" : (media.media_type || "movie"),
         original_language: media.original_language,
         popularity: media.popularity,
-        first_air_date: media.first_air_date,
+        first_air_date: media.first_air_date || media.release_date,
         vote_average: media.vote_average,
         vote_count: media.vote_count,
         adult: media.adult,
@@ -74,7 +75,7 @@ export default function SearchPage() {
         origin_country: JSON.stringify(media.origin_country || []),
         status: "pending",
       });
-      toast.success(`"${media.name || media.original_name}" agregado a tu watchlist`);
+      toast.success(`"${displayName}" agregado a tu watchlist`);
       setSelectedMedia(null);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al agregar");
@@ -163,10 +164,10 @@ export default function SearchPage() {
       <Dialog open={!!selectedMedia} onOpenChange={() => setSelectedMedia(null)}>
         {selectedMedia && (
           <DialogContent className="max-w-2xl overflow-hidden p-0">
-            {selectedMedia.backdrop_path && (
+            {(selectedMedia.backdrop_path || selectedMedia.poster_path || selectedMedia.profile_path) && (
               <div className="relative h-48 w-full">
                 <img
-                  src={getBackdropUrl(selectedMedia.backdrop_path)}
+                  src={getBackdropUrl(selectedMedia.backdrop_path) || getMediaImage(selectedMedia)}
                   alt=""
                   className="h-full w-full object-cover"
                 />
@@ -176,16 +177,18 @@ export default function SearchPage() {
             <div className="p-6 space-y-4">
               <DialogHeader>
                 <DialogTitle className="text-2xl">
-                  {selectedMedia.name || selectedMedia.original_name}
+                  {getMediaName(selectedMedia)}
                 </DialogTitle>
                 <DialogDescription className="flex items-center gap-2 pt-1">
                   <Badge variant="secondary" className="gap-1">
                     {selectedMedia.media_type === "tv" ? (
                       <Tv className="h-3 w-3" />
+                    ) : selectedMedia.media_type === "person" ? (
+                      <UserRound className="h-3 w-3" />
                     ) : (
                       <Film className="h-3 w-3" />
                     )}
-                    {selectedMedia.media_type === "tv" ? "Serie" : "Película"}
+                    {getMediaTypeLabel(selectedMedia.media_type)}
                   </Badge>
                   {selectedMedia.vote_average > 0 && (
                     <Badge variant="outline" className="gap-1">
@@ -193,9 +196,9 @@ export default function SearchPage() {
                       {selectedMedia.vote_average.toFixed(1)}
                     </Badge>
                   )}
-                  {selectedMedia.first_air_date && (
+                  {(selectedMedia.first_air_date || selectedMedia.release_date) && (
                     <Badge variant="outline">
-                      {selectedMedia.first_air_date.split("-")[0]}
+                      {(selectedMedia.first_air_date || selectedMedia.release_date).split("-")[0]}
                     </Badge>
                   )}
                 </DialogDescription>
@@ -245,8 +248,8 @@ function MediaGrid({
         >
           <div className="relative aspect-[2/3] overflow-hidden">
             <img
-              src={getPosterUrl(item.poster_path)}
-              alt={item.name || item.original_name}
+              src={getMediaImage(item)}
+              alt={getMediaName(item)}
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
             />
@@ -266,14 +269,14 @@ function MediaGrid({
           </div>
           <CardContent className="p-3">
             <h3 className="truncate text-sm font-medium">
-              {item.name || item.original_name}
+              {getMediaName(item)}
             </h3>
             <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
               <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                {item.media_type === "tv" ? "Serie" : "Película"}
+                {getMediaTypeLabel(item.media_type)}
               </Badge>
-              {item.first_air_date && (
-                <span>{item.first_air_date.split("-")[0]}</span>
+              {(item.first_air_date || item.release_date) && (
+                <span>{(item.first_air_date || item.release_date).split("-")[0]}</span>
               )}
             </div>
           </CardContent>
