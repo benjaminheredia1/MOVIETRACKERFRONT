@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Search, Star, Plus, TrendingUp, Loader2, Film, Tv } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -47,6 +47,11 @@ export default function SearchPage() {
       setLoadingRec(false);
     }
   }, []);
+
+  // Cargar recomendaciones al montar el componente
+  useEffect(() => {
+    loadRecommendations();
+  }, [loadRecommendations]);
 
   const handleAddToWatchlist = async (media: MediaResult) => {
     setAddingItem(true);
@@ -134,16 +139,23 @@ export default function SearchPage() {
         </section>
       )}
 
-      {/* Empty state */}
-      {results.length === 0 && recommendations.length === 0 && !loading && (
+      {/* Loading state */}
+      {results.length === 0 && recommendations.length === 0 && !loading && !loadingRec && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted mb-4">
             <Search className="h-10 w-10 text-muted-foreground" />
           </div>
           <h3 className="text-lg font-semibold">Empieza a buscar</h3>
           <p className="mt-1 text-sm text-muted-foreground max-w-sm">
-            Escribe el nombre de una película o serie, o explora las tendencias actuales
+            Escribe el nombre de una película o serie para encontrar contenido
           </p>
+        </div>
+      )}
+
+      {/* Loading recommendations */}
+      {loadingRec && recommendations.length === 0 && (
+        <div className="flex justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       )}
 

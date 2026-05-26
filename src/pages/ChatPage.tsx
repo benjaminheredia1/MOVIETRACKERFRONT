@@ -8,6 +8,7 @@ import {
   MessageCircle,
   RefreshCw,
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -169,7 +170,13 @@ export default function ChatPage() {
                         : "bg-muted text-foreground rounded-bl-md"
                     }`}
                   >
-                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                    {msg.role === "assistant" ? (
+                      <div className="prose prose-sm prose-invert max-w-none [&>p]:my-1 [&>ul]:my-1 [&>ol]:my-1 [&>h1]:text-base [&>h1]:font-bold [&>h1]:my-2 [&>h2]:text-sm [&>h2]:font-semibold [&>h2]:my-1.5 [&>h3]:text-sm [&>h3]:font-medium [&>h3]:my-1 [&>pre]:bg-background/50 [&>pre]:rounded-lg [&>pre]:p-2 [&>pre]:my-1 [&>code]:bg-background/50 [&>code]:px-1 [&>code]:rounded [&>blockquote]:border-l-2 [&>blockquote]:border-primary/50 [&>blockquote]:pl-3 [&>blockquote]:my-1 [&>blockquote]:italic [&_li]:my-0.5 [&_a]:text-primary [&_a]:underline">
+                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      </div>
+                    ) : (
+                      <p className="whitespace-pre-wrap">{msg.content}</p>
+                    )}
                     <span
                       className={`mt-1 block text-[10px] ${
                         msg.role === "user"
