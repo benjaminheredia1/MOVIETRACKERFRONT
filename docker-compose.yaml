@@ -1,0 +1,85 @@
+services:
+  # ============================================
+  # PostgreSQL - Base de datos principal
+  # ============================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: movietracker-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sistema}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sistema}
+      POSTGRES_DB: ${POSTGRES_DB:-sistema}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sistema}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # Redis - Caché
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: movietracker-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # Backend - API Go
+  # ============================================
+  backend:
+    build:
+      context: ../MovieTrackerBack
+      dockerfile: DockerFile
+    container_name: movietracker-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    env_file:
+      - ../MovieTrackerBack/.env
+    environment:
+      host: postgres
+      port: 5432
+      user: ${POSTGRES_USER:-sistema}
+      password: ${POSTGRES_PASSWORD:-sistema}
+      dbname: ${POSTGRES_DB:-sistema}
+      app_port: 8080
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ============================================
+  # Frontend - React + Nginx
+  # ============================================
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: movietracker-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  redis_data:
