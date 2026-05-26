@@ -11,7 +11,6 @@ import {
 import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { sendChatMessage } from "@/services/api";
@@ -121,7 +120,7 @@ export default function ChatPage() {
 
       {/* Chat Area */}
       <Card className="flex flex-1 flex-col overflow-hidden border-0 bg-card shadow-sm">
-        <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+        <div className="flex-1 overflow-y-auto p-4" ref={scrollRef}>
           {messages.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center py-12">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-4">
@@ -217,7 +216,7 @@ export default function ChatPage() {
               )}
             </div>
           )}
-        </ScrollArea>
+        </div>
 
         {/* Input Area */}
         <div className="border-t border-border/50 p-4">
